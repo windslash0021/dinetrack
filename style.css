@@ -1,0 +1,183 @@
+/* Global Styles */
+
+@import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap');
+
+
+
+html, body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #ffffff; /* Unified background */
+    color: black;
+
+}
+
+/* Header */
+header {
+    background-color: #228B22;
+    color: white;
+    padding: 12px;
+}
+
+.logo {
+    font-size: 24px; /* Adjusted size */
+    font-weight: bold;
+    font-family: "Poppins", sans-serif;
+    font-style: normal;
+    display: flex; /* Ensures alignment for icon and text */
+    align-items: center;
+    color: #fff;
+    cursor: default;
+    user-select: none;
+    transition: transform 0.3s ease, scale 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between; /* Ensure items are on opposite ends */
+    align-items: center;
+    padding: 0 15px; /* Add some horizontal spacing */
+}
+
+
+nav ul {
+    display: flex; /* Display navbar items in a row */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    
+}
+
+nav li {
+    margin-left: 20px; /* Add spacing between menu items */
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    transition: transform 0.3s ease, background-color 0.8s ease;
+}
+
+.nav-link-btn {
+    background-color: transparent;
+    border-radius: 9px;
+    transition: transform 0.3s ease, background-color 0.8s ease;
+}
+
+.nav-link-btn:hover {
+    background-color: #4CAF50;
+    border-radius: 9px;
+    transform: scale(1.1);
+}
+
+
+/* Main Content */
+main {
+    padding: 20px;
+}
+
+/* Login Box */
+.login-box {
+    width: 450px;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #333;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.login-box h1, .login-box p {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.input-field {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-field i {
+    position: absolute;
+    top: 12px;
+    left: 10px;
+    color: #aaa;
+}
+
+.input-field input {
+    width: 100%;
+    padding: 10px 15px;
+    border: none;
+    border-bottom: 1px solid #aaa;
+    background-color: transparent;
+    color: #fff;
+}
+
+
+
+/* Buttons */
+button {
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ff512f;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #57e220;
+    color: #000;
+}
+
+/* Footer */
+footer {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-left, .footer-right {
+    flex: 1;
+}
+
+.footer-right ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.footer-right li {
+    margin-right: 20px;
+}
+
+.footer-right a {
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Alerts */
+
+.nav-link-btn.active {
+    background-color: #4CAF50;
+    color: #fff;
+}
+

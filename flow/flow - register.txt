@@ -1,0 +1,21 @@
+Workflow:
+
+User registers in register.php.
+OTP is emailed to the user.
+User enters OTP in verify.php.
+On successful verification:
+User data is inserted into the usertable.
+Status is set to Active.
+
+Sender's Role:
+
+The email account configured in $mail->Username will send the OTP.
+Example: If you configure jamesapostol12@gmail.com, this will appear as the sender in the user's inbox.
+
+Recipient's Role:
+
+The user's email, entered during registration (e.g., user@example.com), will receive the OTP.
+The recipient's email is dynamically added using:
+php
+Copy code
+$mail->addAddress($email, $name); // $email is the user's email
