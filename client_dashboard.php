@@ -7,7 +7,7 @@ $popular_query = "SELECT * FROM services ORDER BY orders_completed DESC LIMIT 4"
 $popular_services = $conn->query($popular_query);
 
 // Fetch more services
-$more_services_query = "SELECT * FROM services ORDER BY created_at DESC LIMIT 8"; // Example sorting by latest created
+$more_services_query = "SELECT * FROM services ORDER BY joined_at DESC LIMIT 8"; // Example sorting by latest created
 $more_services = $conn->query($more_services_query);
 ?>
 
@@ -66,20 +66,14 @@ $more_services = $conn->query($more_services_query);
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
     <div class="container">
         <a class="navbar-brand" href="#">DineTrack</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="#">Search</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Booked Services</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Account</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Logout</a></li>
-            </ul>
-        </div>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="#">Order History</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Account Settings</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Logout</a></li>
+        </ul>
     </div>
 </nav>
 
@@ -91,45 +85,33 @@ $more_services = $conn->query($more_services_query);
 </div>
 
 <!-- Most Popular Section -->
-<div class="container service-section">
-    <h2>Most Popular</h2>
-    <div class="row g-4">
-        <?php while($service = $popular_services->fetch_assoc()): ?>
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="card service-card">
-                <img src="<?php echo $service['image_url']; ?>" alt="Service Image">
+<div class="container mt-4">
+    <h2 class="mb-4">Most Popular Services</h2>
+    <div class="row">
+        <?php while ($service = $popular_services->fetch_assoc()): ?>
+        <div class="col-md-3">
+            <div class="card">
+                <img src="<?= $service['image_url'] ?>" class="card-img-top" alt="Service">
                 <div class="card-body">
-                    <h5 class="card-title"><?php echo $service['company_name']; ?></h5>
-                    <p class="card-text"><?php echo $service['category']; ?></p>
-                    <p class="card-text"><?php echo $service['location']; ?></p>
-                    <p class="card-text"><?php echo $service['rating']; ?> Stars</p>
-                    <p class="card-text"><?php echo $service['orders_completed']; ?> orders completed</p>
+                    <h5 class="card-title"><?= $service['company_name'] ?></h5>
+                    <p class="card-text"><?= $service['orders_completed'] ?> Orders Completed</p>
+                    <a href="client_order.php?service_id=<?= $service['service_id'] ?>" class="btn btn-success">Order Now</a>
                 </div>
             </div>
         </div>
         <?php endwhile; ?>
     </div>
-</div>
 
-<!-- Divider -->
-<div class="container">
-    <div class="divider"></div>
-</div>
-
-<!-- More Services Section -->
-<div class="container service-section">
-    <h2>More Services</h2>
-    <div class="row g-4">
-        <?php while($service = $more_services->fetch_assoc()): ?>
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-            <div class="card service-card">
-                <img src="<?php echo $service['image_url']; ?>" alt="Service Image">
+    <h2 class="my-4">More Services</h2>
+    <div class="row">
+        <?php while ($service = $more_services->fetch_assoc()): ?>
+        <div class="col-md-3">
+            <div class="card">
+                <img src="<?= $service['image_url'] ?>" class="card-img-top" alt="Service">
                 <div class="card-body">
-                    <h5 class="card-title"><?php echo $service['company_name']; ?></h5>
-                    <p class="card-text"><?php echo $service['category']; ?></p>
-                    <p class="card-text"><?php echo $service['location']; ?></p>
-                    <p class="card-text"><?php echo $service['rating']; ?> Stars</p>
-                    <p class="card-text"><?php echo $service['orders_completed']; ?> orders completed</p>
+                    <h5 class="card-title"><?= $service['company_name'] ?></h5>
+                    <p class="card-text">Location: <?= $service['location'] ?></p>
+                    <a href="client_order.php?service_id=<?= $service['service_id'] ?>" class="btn btn-success">Order Now</a>
                 </div>
             </div>
         </div>
