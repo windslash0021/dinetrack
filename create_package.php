@@ -1,9 +1,11 @@
 <?php
+session_start();
 include 'connection.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Validate POST data
 if (isset($_POST['package_name'], $_POST['description'], $_POST['price'])) {
-    $service_id = 1;  // Replace this with the actual service ID of the logged-in caterer
+    $service_id = $_SESSION['service_id'];
     $package_name = $_POST['package_name'];
     $package_description = $_POST['description'];
     $package_price = $_POST['price'];

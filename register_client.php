@@ -18,10 +18,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
     $confirmPassword = $_POST['confirm_password'];
 
-    $address = trim($_POST['address']);
+    $region = trim($_POST['region']);
+    $province = trim($_POST['province']);
+    $city = trim($_POST['city']);
+    $barangay = trim($_POST['barangay']);
+    $streetName = trim($_POST['street_name']); // Note corrected variable name
     $phone = trim($_POST['phone']);
 
-    if (empty($firstName) || empty($lastName) || empty($email) || empty($username) || empty($password) || empty($confirmPassword) || empty($address) || empty($phone)) {
+    if (
+        empty($firstName) || empty($lastName) || empty($gender) || empty($username) ||
+        empty($email) || empty($password) || empty($confirmPassword) ||
+        empty($region) || empty($province) || empty($city) || 
+        empty($barangay) || empty($streetName) || empty($phone)
+    ) {
         $error = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Invalid email format.";
@@ -47,7 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'username' => $username,
                 'email' => $email,
                 'password' => password_hash($password, PASSWORD_BCRYPT),
-                'address' => $address,
+                'region' => $region,
+                'province' => $province,
+                'city' => $city,
+                'barangay' => $barangay,
+                'street_name' => $street_name,
                 'phone' => $phone,
             ];
 
@@ -152,9 +165,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
                 </div>
                 <div class="mb-3">
-                    <label for="address" class="form-label">Address</label>
-                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                    <label for="region" class="form-label">Region</label>
+                    <input type="text" class="form-control" id="region" name="region" required>
                 </div>
+                    <div class="mb-3">
+                    <label for="province" class="form-label">Province</label>
+                        <input type="text" class="form-control" id="province" name="province" required>
+                </div>
+                <div class="mb-3">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" required>
+                </div>
+                <div class="mb-3">
+                    <label for="barangay" class="form-label">Barangay</label>
+                    <input type="text" class="form-control" id="barangay" name="barangay" required>
+                </div>
+                <div class="mb-3">
+                    <label for="street_name" class="form-label">Street Name</label>
+                    <input type="text" class="form-control" id="street_name" name="street_name" required>
+                </div>
+
                 <div class="mb-3">
                     <label for="phone" class="form-label">Phone</label>
                     <input type="text" class="form-control" id="phone" name="phone" required>

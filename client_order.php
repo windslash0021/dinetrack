@@ -1,136 +1,131 @@
 <?php
-include 'connection.php';
+session_start();
+include('connection.php');
 
-// Validate service_id from URL
-if (!isset($_GET['service_id']) || empty($_GET['service_id'])) {
-    die("Error: Service ID is missing in the URL.");
-}
-$service_id = intval($_GET['service_id']); // Sanitize service_id
+// Fetch the service_id from the URL
+$service_id = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
 
-// Check if the service_id exists
-$service_check_query = "SELECT * FROM services WHERE service_id = ?";
-$service_check_stmt = $conn->prepare($service_check_query);
-$service_check_stmt->bind_param("i", $service_id);
-$service_check_stmt->execute();
-$service_result = $service_check_stmt->get_result();
-if ($service_result->num_rows === 0) {
-    die("Error: Invalid Service ID.");
-}
+// Fetch packages and meals based on the service_id
+$packages_query = $conn->prepare("SELECT * FROM packages WHERE service_id = ?");
+$packages_query->bind_param("i", $service_id);
+$packages_query->execute();
+$packages_result = $packages_query->get_result();
 
-// Fetch available packages for the dropdown
-$packages_query = "SELECT * FROM packages WHERE service_id = ?";
-$packages_stmt = $conn->prepare($packages_query);
-$packages_stmt->bind_param("i", $service_id);
-$packages_stmt->execute();
-$packages = $packages_stmt->get_result();
+$meals_query = $conn->prepare("SELECT * FROM meals WHERE service_id = ?");
+$meals_query->bind_param("i", $service_id);
+$meals_query->execute();
+$meals_result = $meals_query->get_result();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Retrieve form data
-    $package_id = intval($_POST['package_id']);
-    $client_id = 1; // Replace with actual client ID from session
-    $location = $_POST['location'];
-    $latitude = $_POST['latitude'];
-    $longitude = $_POST['longitude'];
-    $total_amount = floatval($_POST['total_amount']);
+    $client_id = $_SESSION['client_id']; // Ensure the client is logged in
+    $package_id = $_POST['package_id'] ?? null;
+    $selected_meals = $_POST['meals'] ?? [];
+    $order_date = $_POST['order_date'];
 
-    // Validate inputs
-    if (empty($location) || empty($latitude) || empty($longitude)) {
-        die("Error: Location details are required.");
+    // Calculate total amount
+    $total_amount = 0;
+
+    // Fetch package price
+    if ($package_id) {
+        $package_price_query = $conn->prepare("SELECT price FROM packages WHERE package_id = ?");
+        $package_price_query->bind_param("i", $package_id);
+        $package_price_query->execute();
+        $package_price_query->bind_result($package_price);
+        $package_price_query->fetch();
+        $total_amount += $package_price;
+        $package_price_query->close();
     }
 
-    // Insert the order into the database
-    $sql = "INSERT INTO orders (client_id, package_id, service_id, location, latitude, longitude, total_amount, event_date) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iiisssd", $client_id, $package_id, $service_id, $location, $latitude, $longitude, $total_amount);
+    // Fetch meal prices
+    if (!empty($selected_meals)) {
+        $meal_ids = implode(",", array_map('intval', $selected_meals));
+        $meal_prices_query = $conn->query("SELECT price FROM meals WHERE meal_id IN ($meal_ids)");
+        while ($row = $meal_prices_query->fetch_assoc()) {
+            $total_amount += $row['price'];
+        }
+    }
 
-    if ($stmt->execute()) {
-        echo "<script>alert('Order placed successfully!');</script>";
+    // Insert into client_orders
+    $order_insert_query = $conn->prepare("
+        INSERT INTO client_orders (client_id, package_id, service_id, order_date, total_amount, invoice_status)
+        VALUES (?, ?, ?, ?, ?, 'Pending')
+    ");
+    $order_insert_query->bind_param("iiisd", $client_id, $package_id, $service_id, $order_date, $total_amount);
+
+    if ($order_insert_query->execute()) {
+        $_SESSION['order_id'] = $conn->insert_id; // Save order ID for later steps
+        header("Location: client_locations.php");
+        exit();
     } else {
-        echo "Error: " . $stmt->error;
+        echo "Error: " . $conn->error;
     }
-
-    $stmt->close();
 }
-$conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Place Order</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
-    <style>
-        #map {
-            height: 400px;
-            width: 100%;
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function calculateTotal() {
+            const packagePrice = parseFloat(document.querySelector('select[name="package_id"] option:checked').dataset.price || 0);
+            const mealPrices = Array.from(document.querySelectorAll('input[name="meals[]"]:checked'))
+                .reduce((total, meal) => total + parseFloat(meal.dataset.price), 0);
+
+            const total = packagePrice + mealPrices;
+            document.getElementById('totalAmount').textContent = `Total: ₱${total.toFixed(2)}`;
         }
-    </style>
+    </script>
 </head>
 <body>
-<h2>Place Your Order</h2>
-<form method="POST">
-    <label for="package">Select Package:</label>
-    <select id="package" name="package_id" required>
-        <?php while ($row = $packages->fetch_assoc()): ?>
-            <option value="<?= $row['package_id'] ?>"><?= $row['package_name'] ?> ($<?= $row['price'] ?>)</option>
-        <?php endwhile; ?>
-    </select>
-    <input type="hidden" id="total_amount" name="total_amount">
-    <br><br>
-
-    <label>Choose Location:</label>
-    <input type="text" id="locationInput" name="location" placeholder="Search location" required>
-    <div id="map"></div>
-    <input type="hidden" id="lat" name="latitude">
-    <input type="hidden" id="lng" name="longitude">
-    <br>
-    <button type="submit">Place Order</button>
-</form>
-
-<script>
-    let map, marker;
-
-    function initMap() {
-        const initialLocation = { lat: -1.286389, lng: 36.817223 }; // Default location (Nairobi)
-        map = new google.maps.Map(document.getElementById("map"), {
-            center: initialLocation,
-            zoom: 14,
-        });
-
-        const input = document.getElementById("locationInput");
-        const autocomplete = new google.maps.places.Autocomplete(input);
-
-        autocomplete.addListener("place_changed", () => {
-            const place = autocomplete.getPlace();
-            if (!place.geometry) return;
-
-            const location = place.geometry.location;
-            document.getElementById("lat").value = location.lat();
-            document.getElementById("lng").value = location.lng();
-
-            if (marker) marker.setMap(null); // Clear the previous marker
-            marker = new google.maps.Marker({
-                position: location,
-                map: map,
-            });
-            map.setCenter(location);
-        });
-    }
-
-    // Validate the form on submission
-    document.querySelector("form").onsubmit = function (event) {
-        const locationInput = document.getElementById("locationInput").value;
-        const latitude = document.getElementById("lat").value;
-        const longitude = document.getElementById("lng").value;
-
-        if (!locationInput || !latitude || !longitude) {
-            alert("Please select a valid location using the map.");
-            event.preventDefault(); // Prevent the form from submitting
-        }
-    };
-
-    window.onload = initMap;
-</script>
+<div class="container my-5">
+    <h1>Place Your Order</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="package" class="form-label">Select a Package</label>
+            <select name="package_id" class="form-select" onchange="calculateTotal()">
+                <option value="">None</option>
+                <?php while ($package = $packages_result->fetch_assoc()): ?>
+                    <option value="<?= $package['package_id'] ?>" data-price="<?= $package['price'] ?>">
+                        <?= htmlspecialchars($package['package_name']) ?> - ₱<?= number_format($package['price'], 2) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="meals" class="form-label">Select Meals</label>
+            <?php while ($meal = $meals_result->fetch_assoc()): ?>
+                <div class="form-check">
+                    <input 
+                        type="checkbox" 
+                        name="meals[]" 
+                        value="<?= $meal['meal_id'] ?>" 
+                        class="form-check-input"
+                        data-price="<?= $meal['price'] ?>" 
+                        onchange="calculateTotal()">
+                    <label class="form-check-label">
+                        <?= htmlspecialchars($meal['name']) ?> - ₱<?= number_format($meal['price'], 2) ?>
+                    </label>
+                </div>
+            <?php endwhile; ?>
+        </div>
+        <div class="mb-3">
+            <label for="order_date" class="form-label">Event Date</label>
+            <input 
+                type="date" 
+                name="order_date" 
+                class="form-control" 
+                min="<?= date('Y-m-d', strtotime('+7 days')) ?>" 
+                max="<?= date('Y-m-d', strtotime('+1 year')) ?>" 
+                required>
+        </div>
+        <h3 id="totalAmount">Total: ₱0.00</h3>
+        <button type="submit" class="btn btn-success">Proceed to Location</button>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

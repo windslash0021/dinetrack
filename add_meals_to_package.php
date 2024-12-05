@@ -1,27 +1,41 @@
 <?php
 include 'connection.php';
 
-// Validate POST data
-if (isset($_POST['package_id'], $_POST['meal_ids'])) {
-    $package_id = $_POST['package_id'];
-    $meal_ids = $_POST['meal_ids']; // Array of selected meal IDs
+if (isset($_POST['package_id'], $_POST['meal_ids'], $_POST['service_id'])) {
+    $package_id = intval($_POST['package_id']);
+    $meal_ids = $_POST['meal_ids']; // Should be an array
+    $service_id = intval($_POST['service_id']);
 
-    // Add each selected meal to the package_meals table
-    foreach ($meal_ids as $meal_id) {
-        $sql = "INSERT INTO package_meals (package_id, meal_id) VALUES (?, ?)";  // meal_id is the column in package_meals table
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $package_id, $meal_id);
-
-        if (!$stmt->execute()) {
-            echo "Error adding meal to package: " . $stmt->error . "<br>";
-            $stmt->close();
-            exit();
-        } else {
-            echo "Meal added to package with meal_id: " . $meal_id . "<br>";
-        }
+    // Validate that meal_ids is an array and contains integers
+    if (!is_array($meal_ids) || empty($meal_ids)) {
+        echo "Error: Invalid meal IDs.";
+        exit();
     }
 
-    echo "Meals added to package successfully!";
+    // Begin a transaction
+    $conn->begin_transaction();
+
+    try {
+        foreach ($meal_ids as $meal_id) {
+            $meal_id = intval($meal_id); // Ensure meal_id is an integer
+            $sql = "INSERT INTO package_meals (package_id, meal_id, service_id) VALUES (?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iii", $package_id, $meal_id, $service_id);
+
+            if (!$stmt->execute()) {
+                throw new Exception("Error adding meal to package: " . $stmt->error);
+            }
+        }
+
+        // Commit transaction
+        $conn->commit();
+        echo "Meals added to package successfully!";
+    } catch (Exception $e) {
+        // Rollback on failure
+        $conn->rollback();
+        echo "Failed to add meals to package: " . $e->getMessage();
+    }
+
     $stmt->close();
 } else {
     echo "Error: Missing required fields.";

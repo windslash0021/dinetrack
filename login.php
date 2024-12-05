@@ -41,8 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Redirect based on role
                 if ($user['role'] === 'client') {
+                    $_SESSION['client_id'] = $user['client_id'];
+                    $_SESSION['service_id'] = $user['service_id'];
                     header("Location: client_dashboard.php");
                 } elseif ($user['role'] === 'service') {
+                    $_SESSION['service_id'] = $user['service_id'];
                     header("Location: service_dashboard.php");
                 }
                 exit();

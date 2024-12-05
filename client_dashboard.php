@@ -72,7 +72,7 @@ $more_services = $conn->query($more_services_query);
         <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link" href="#">Order History</a></li>
             <li class="nav-item"><a class="nav-link" href="#">Account Settings</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Logout</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.php">Logout</a></li>
         </ul>
     </div>
 </nav>

@@ -15,11 +15,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = $clientData['username'];
             $password = $clientData['password'];
             $gender = $clientData['gender'];
-            $address = $clientData['address'];
+            $region = $clientData['region'];
+            $province = $clientData['province'];
+            $city = $clientData['city'];
+            $barangay = $clientData['barangay'];
+            $street_name = $clientData['street_name'];
+            
             $phone = $clientData['phone'];
 
-            $stmt = $conn->prepare("INSERT INTO clients (first_name, last_name, email, username, password, gender, address, phone, code, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
-            $stmt->bind_param("ssssssssi", $firstName, $lastName, $email, $username, $password, $gender, $address, $phone, $storedOtp);
+            $stmt = $conn->prepare("INSERT INTO clients (first_name, last_name, email, username, password, gender, region, province, city, barangay, street_name, phone, code, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')");
+            $stmt->bind_param("ssssssssssssi", $firstName, $lastName, $email, $username, $password, $gender, $region, $province, $city, $barangay, $street_name, $phone, $storedOtp);
 
             if ($stmt->execute()) {
                 $clientId = $stmt->insert_id; // Get the inserted client ID
